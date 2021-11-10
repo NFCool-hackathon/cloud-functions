@@ -17,9 +17,37 @@ export const sendPhoneVerification = functions.region("europe-west1").https.onRe
     res.status(404).send();
   }
 
-  console.log("phoneNumber = " + phoneNumber);
-
   const twilioRes = await client.verify.services("VAae61bb31ff07b220a4b56ad7585e543b").verifications.create({to: phoneNumber, channel: "sms"});
+  console.log("DEBUG TWILIO RES");
   console.log(JSON.stringify(twilioRes));
   res.status(200).send();
+});
+
+export const checkPhoneVerification = functions.region("europe-west1").https.onRequest(async (req, res) => {
+  const tokenId = req.query.tokenId;
+  const unitId = req.query.unitId;
+  const pin = req.query.pin as string;
+
+  if (!pin || !tokenId || !unitId) {
+    res.status(400).send({message: "You need to send all parameters"});
+  }
+
+  let phoneNumber = "";
+  const sale = await admin.firestore().collection("sales").doc(tokenId + "-" + unitId).get();
+  if (sale.data()?.phoneNumber) {
+    phoneNumber = sale.data()?.phoneNumber;
+  } else {
+    res.status(404).send({message: "No phone number is associated with this token"});
+  }
+
+  const twilioRes = await client.verify.services("VAae61bb31ff07b220a4b56ad7585e543b").verificationChecks.create({to: phoneNumber, code: pin});
+
+  console.log("DEBUG TWILIO RES");
+  console.log(JSON.stringify(twilioRes));
+
+  if (twilioRes.valid) {
+    res.status(200).send({valid: true});
+  } else {
+    res.status(200).send({valid: false});
+  }
 });
