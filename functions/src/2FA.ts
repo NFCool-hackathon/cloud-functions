@@ -5,7 +5,7 @@ import * as twilio from "twilio";
 import {twilioAuthToken, twilioSid} from "../.env";
 const client = new twilio.Twilio(twilioSid, twilioAuthToken);
 
-export const sendPhoneVerification = functions.region("europe-west1").https.onRequest(async (req, res) => {
+export const sendPhoneVerification = functions.region("us-central1").https.onRequest(async (req, res) => {
   const tokenId = req.query.tokenId;
   const unitId = req.query.unitId;
 
@@ -23,7 +23,7 @@ export const sendPhoneVerification = functions.region("europe-west1").https.onRe
   res.status(200).send();
 });
 
-export const checkPhoneVerification = functions.region("europe-west1").https.onRequest(async (req, res) => {
+export const checkPhoneVerification = functions.region("us-central1").https.onRequest(async (req, res) => {
   const tokenId = req.query.tokenId;
   const unitId = req.query.unitId;
   const pin = req.query.pin as string;
@@ -59,11 +59,3 @@ export const checkPhoneVerification = functions.region("europe-west1").https.onR
     res.status(200).send({valid: false});
   }
 });
-
-// const awaitFn = async (milli: number) => {
-//   return new Promise((resolve) => {
-//     setTimeout(() => {
-//       resolve();
-//     }, milli);
-//   });
-// };
