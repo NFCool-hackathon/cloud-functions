@@ -27,6 +27,7 @@ export const checkPhoneVerification = functions.region("us-central1").https.onRe
   const tokenId = req.query.tokenId;
   const unitId = req.query.unitId;
   const pin = req.query.pin as string;
+  const to = req.query.to;
 
   if (!pin || !tokenId || !unitId) {
     console.error("You need to send all parameters");
@@ -54,8 +55,8 @@ export const checkPhoneVerification = functions.region("us-central1").https.onRe
   }
 
   if (twilioRes && twilioRes.valid) {
-    res.status(200).send({valid: true});
+    res.status(200).send({valid: true, to: to, tokenId: tokenId, unitId: unitId});
   } else {
-    res.status(200).send({valid: false});
+    res.status(200).send({valid: false, to: to, tokenId: tokenId, unitId: unitId});
   }
 });
