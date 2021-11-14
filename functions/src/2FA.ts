@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 import * as twilio from "twilio";
-import {twilioAuthToken, twilioSid} from "../.env";
+import {serviceSid, twilioAuthToken, twilioSid} from "../.env";
 const client = new twilio.Twilio(twilioSid, twilioAuthToken);
 
 export const sendPhoneVerification = functions.region("us-central1").https.onRequest(async (req, res) => {
@@ -17,7 +17,7 @@ export const sendPhoneVerification = functions.region("us-central1").https.onReq
     res.status(404).send();
   }
 
-  const twilioRes = await client.verify.services("VAae61bb31ff07b220a4b56ad7585e543b").verifications.create({to: phoneNumber, channel: "sms"});
+  const twilioRes = await client.verify.services(serviceSid).verifications.create({to: phoneNumber, channel: "sms"});
   console.log("DEBUG TWILIO RES");
   console.log(JSON.stringify(twilioRes));
   res.status(200).send();
@@ -45,7 +45,7 @@ export const checkPhoneVerification = functions.region("us-central1").https.onRe
 
   let twilioRes;
   try {
-    twilioRes = await client.verify.services("VAae61bb31ff07b220a4b56ad7585e543b").verificationChecks.create({to: phoneNumber, code: pin});
+    twilioRes = await client.verify.services(serviceSid).verificationChecks.create({to: phoneNumber, code: pin});
     console.log("DEBUG TWILIO RES");
     console.log(JSON.stringify(twilioRes));
   } catch (e) {
