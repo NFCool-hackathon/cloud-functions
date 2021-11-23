@@ -3,31 +3,28 @@ import * as admin from "firebase-admin";
 
 import * as twilio from "twilio";
 import {serviceSid, twilioAuthToken, twilioSid} from "../.env";
+import {triggerError} from "./utils/error";
 const client = new twilio.Twilio(twilioSid, twilioAuthToken);
 
-export const sendPhoneVerification = functions.region("us-central1").https.onRequest(async (req, res) => {
-  const tokenId = req.query.tokenId;
-  const unitId = req.query.unitId;
-
+export const sendPhoneVerification = functions.region("us-central1").https.onCall(async ({tokenId, unitId}) => {
   let phoneNumber = "";
   const sale = await admin.firestore().collection("sales").doc(tokenId + "-" + unitId).get();
   if (sale.data()?.phoneNumber) {
     phoneNumber = sale.data()?.phoneNumber;
   } else {
-    res.status(404).send();
+    triggerError("not-found", "No phone number has been found");
   }
 
   const twilioRes = await client.verify.services(serviceSid).verifications.create({to: phoneNumber, channel: "sms"});
   console.log("DEBUG TWILIO RES");
   console.log(JSON.stringify(twilioRes));
-  res.status(200).send();
+  return;
 });
 
 export const checkPhoneVerification = functions.region("us-central1").https.onRequest(async (req, res) => {
   const tokenId = req.query.tokenId;
   const unitId = req.query.unitId;
   const pin = req.query.pin as string;
-  const to = req.query.to;
 
   if (!pin || !tokenId || !unitId) {
     console.error("You need to send all parameters");
@@ -55,8 +52,16 @@ export const checkPhoneVerification = functions.region("us-central1").https.onRe
   }
 
   if (twilioRes && twilioRes.valid) {
-    res.status(200).send({valid: true, to: to, tokenId: tokenId, unitId: unitId});
+    res.status(200).send({valid: true, tokenId: tokenId, unitId: unitId});
   } else {
-    res.status(200).send({valid: false, to: to, tokenId: tokenId, unitId: unitId});
+    res.status(200).send({valid: false, tokenId: tokenId, unitId: unitId});
   }
 });
+
+// const sleep = async (time: number) => {
+//   return new Promise((resolve) => {
+//     setTimeout(() => {
+//       resolve();
+//     }, time);
+//   });
+// };
